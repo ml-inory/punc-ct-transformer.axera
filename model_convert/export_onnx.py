@@ -54,7 +54,7 @@ def main():
         name="text_lengths",
         data_type=onnx.TensorProto.INT32,
         dims=[1],
-        vals=np.array([feats_length], dtype=np.int32).tobytes(),
+        vals=np.array([feats_length], dtype=np.int32),
     )
     m.graph.initializer.append(const)
     m.graph.input.pop()  # remove text_lengths from inputs

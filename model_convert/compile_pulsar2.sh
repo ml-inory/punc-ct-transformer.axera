@@ -25,7 +25,7 @@ if [ ! -f "pulsar2_config.json" ]; then
     exit 1
 fi
 
-if [ ! -f "calib_data.tar.gz" ]; then
+if [ ! -f "export/calib_data.tar.gz" ]; then
     echo "WARNING: calib_data.tar.gz not found. Quantization may fail."
     echo "Generate calibration data with numpy (10 Chinese text samples, int32 token IDs)."
     exit 1
@@ -59,7 +59,7 @@ docker run --rm \
     -v "$(pwd):/ws" \
     -w /ws \
     pulsar2:6.0 \
-    -c "pulsar2 build --config compile/pulsar2_config.json 2>&1 | tee compile/compile.log"
+    -c "pulsar2 build --config /ws/pulsar2_config.json 2>&1 | tee compile/compile.log"
 
 # Check result
 if [ -f "compile/model.axmodel" ]; then

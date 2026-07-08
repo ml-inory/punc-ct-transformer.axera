@@ -1,0 +1,14 @@
+# ONNX 操作
+onnx>=1.14
+onnx-simplifier>=0.4
+onnxruntime>=1.14
+
+# 校准数据生成
+numpy>=1.21
+
+# Pulsar2 通过 Docker 提供，镜像地址：
+# https://hf-mirror.com/AXERA-TECH/Pulsar2
+# docker pull pulsar2:6.0
+
+# Python 虚拟环境（可选）
+# pip install uv

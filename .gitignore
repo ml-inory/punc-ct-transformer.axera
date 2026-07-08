@@ -6,3 +6,5 @@ model_convert/calib_data.tar.gz
 # Duplicate tokens.json (use models/tokens.json)
 python/sherpa_punct_sdk/tokens.json
 model_convert/tokens.json
+__pycache__/
+*.pyc

@@ -1,0 +1,34 @@
+{
+  "model_name": "sherpa-punct-ct-transformer",
+  "framework": "pytorch",
+  "inputs": [
+    {
+      "name": "inputs",
+      "shape": [
+        1,
+        64
+      ],
+      "dtype": "int32",
+      "layout": "NCHW",
+      "preprocess": "token_ids from CharTokenizer, vocab size 272727; padded to 64 tokens with 0"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "logits",
+      "shape": [
+        1,
+        64,
+        6
+      ],
+      "dtype": "float32",
+      "semantic": "6-class punctuation logits: <unk>, _, ，, 。, ?, 、"
+    }
+  ],
+  "opset": 14,
+  "onnx_size_bytes": 294372519,
+  "tokenizer_path": "tokens.json",
+  "config_path": "config.yaml",
+  "staticized": true,
+  "text_lengths_note": "text_lengths converted to graph constant (value=64) for Pulsar2 compatibility"
+}

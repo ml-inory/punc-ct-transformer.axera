@@ -1,0 +1,32 @@
+{
+  "input": "/ws/export/model.onnx",
+  "output_dir": "/ws/compile",
+  "output_name": "model.axmodel",
+  "work_dir": "/ws/compile/work",
+  "model_type": "ONNX",
+  "target_hardware": "AX650",
+  "npu_mode": "NPU3",
+  "input_shapes": "inputs:1x64",
+  "onnx_opt": {
+    "disable_onnx_optimization": false,
+    "enable_onnxsim": false,
+    "model_check": true
+  },
+  "quant": {
+    "input_configs": [
+      {
+        "tensor_name": "inputs",
+        "calibration_dataset": "/ws/export/calib_data.tar.gz",
+        "calibration_format": "Numpy",
+        "calibration_size": 10,
+        "calibration_mean": [],
+        "calibration_std": []
+      }
+    ],
+    "calibration_method": "MinMax",
+    "precision_analysis": true,
+    "precision_analysis_method": "PerLayer",
+    "precision_analysis_mode": "Reference",
+    "highest_mix_precision": false
+  }
+}

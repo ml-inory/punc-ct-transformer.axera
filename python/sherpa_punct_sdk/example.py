@@ -1,0 +1,58 @@
+#!/usr/bin/env python3
+"""Example: Sherpa Onnx Punctuation Prediction on AX650 NPU.
+
+Usage:
+    python example.py                                    # demo texts
+    python example.py "今天天气真好我们出去散步吧"         # custom text
+"""
+
+import os
+import sys
+
+
+def main():
+    from sherpa_punct_sdk import PunctuationPipeline
+
+    # Paths: adjust if running from a different directory.
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    model_path = os.path.join(base_dir, "..", "..", "..", "compile", "model.axmodel")
+    tokens_path = os.path.join(base_dir, "..", "..", "..", "export", "tokens.json")
+
+    # On-device fallback: look in package layout
+    if not os.path.exists(model_path):
+        model_path = os.path.join(base_dir, "..", "..", "models", "model.axmodel")
+    if not os.path.exists(tokens_path):
+        tokens_path = os.path.join(base_dir, "..", "..", "models", "tokens.json")
+    if not os.path.exists(model_path):
+        # Use ONNX for local testing (CPU only)
+        model_path = os.path.join(base_dir, "..", "..", "..", "export", "model.onnx")
+        print("NOTE: Using ONNX model (CPU). For NPU, ensure model.axmodel is present.")
+        provider = "CPUExecutionProvider"
+    else:
+        provider = "AxEngineExecutionProvider"
+
+    print(f"Model: {model_path}")
+    print(f"Tokens: {tokens_path}")
+    print(f"Provider: {provider}")
+
+    pipeline = PunctuationPipeline(model_path, tokens_path, provider)
+
+    texts = []
+    if len(sys.argv) > 1:
+        texts = [" ".join(sys.argv[1:])]
+    else:
+        texts = [
+            "你好吗how are you我很好谢谢",
+            "今天天气真不错我们出去走走吧",
+            "这个方案有三个优点第一成本低第二效率高第三维护简单",
+            "请确认以下事项一合同已签署二款项已到账三交付日期已确定",
+        ]
+
+    for text in texts:
+        result = pipeline(text)
+        print(f"\nInput:  {text}")
+        print(f"Output: {result}")
+
+
+if __name__ == "__main__":
+    main()

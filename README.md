@@ -49,6 +49,12 @@
 echo "/soc/lib" >> /etc/ld.so.conf && ldconfig
 ```
 
+## 下载模型文件
+
+大文件（model.axmodel, model.onnx）通过 GitHub Releases 分发：
+
+
+
 ## 快速开始
 
 ### Python SDK

@@ -4,10 +4,6 @@
 # Long text is automatically split into overlapping windows for the model's
 # fixed 64-token input.
 
-import json
-import os
-from typing import List
-
 import numpy as np
 
 from .preprocess import CharTokenizer
@@ -15,7 +11,6 @@ from .inference import PunctInference
 from .postprocess import decode_punctuation
 
 
-PUNCT_MARKS = ["", "", "，", "。", "？", "、"]
 INPUT_LENGTH = 64
 WINDOW_STRIDE = 60  # step size; overlap = INPUT_LENGTH - WINDOW_STRIDE = 4
 
@@ -39,9 +34,7 @@ class PunctuationPipeline:
         if not hasattr(self.tokenizer, "id2token") or not self.tokenizer.id2token:
             raise RuntimeError("Failed to load tokens.json")
         self.id2token = self.tokenizer.id2token
-        self.inference = PunctInference(
-            model_path, tokens_path, provider
-        )
+        self.inference = PunctInference(model_path, provider)
 
     def _run_window(self, tokens: List[int]) -> np.ndarray:
         """Run inference on a single window, return logits for valid tokens."""

@@ -113,7 +113,7 @@ cd cpp
 
 # 推送 demo 到板端并运行（模型文件已提前放在板端）
 scp build/demo root@<board>:/tmp/
-ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo /path/to/model.axmodel /path/to/tokens.json"
+ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo -m model.axmodel -t tokens.json"
 ```
 
 ### 从零复现模型转换

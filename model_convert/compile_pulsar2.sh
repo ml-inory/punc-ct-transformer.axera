@@ -15,8 +15,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
 # Verify prerequisites
-if [ ! -f "model.onnx" ]; then
-    echo "ERROR: model.onnx not found. Run export_onnx.py first."
+if [ ! -f "export/model.onnx" ]; then
+    echo "ERROR: export/model.onnx not found. Run:"
+    echo "  python export_onnx.py --input model.onnx"
     exit 1
 fi
 
@@ -52,6 +53,7 @@ fi
 
 # Clean previous build
 rm -rf compile/work compile/model.axmodel
+mkdir -p compile
 
 # Run Pulsar2 build
 echo "Starting Pulsar2 compilation..."

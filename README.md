@@ -107,20 +107,12 @@ python sherpa_punct_sdk/example.py "今天天气真好我们出去散步吧"
 ```bash
 cd cpp
 
-# 1. 下载 AX650 BSP SDK（含 aarch64 交叉编译器和 NPU 运行时）
-#    下载地址：https://hf-mirror.com/AXERA-TECH/AX650-Community-Hub/resolve/main/sdk/
-#             edge-computing-AX650_SDK_V3.10.2/02.%20SDK/AX650_SDK_V3.10.2/
-#             AX650_SDK_V3.10.2_20260513151335.tgz
-wget <BSP_SDK_URL> -O ax650_sdk.tgz
-tar xzf ax650_sdk.tgz
-# build.sh 会自动发现 cpp/AX650_SDK_* 目录，无需手动指定路径
-
-# 2. 一键编译
+# 一键编译（首次自动下载 AX650 BSP SDK）
 ./build.sh
 
 # 产物：build/demo
 
-# 3. 推送 demo 到板端并运行（模型文件已提前放在板端）
+# 推送 demo 到板端并运行（模型文件已提前放在板端）
 scp build/demo root@<board>:/tmp/
 ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo /path/to/model.axmodel /path/to/tokens.json"
 ```

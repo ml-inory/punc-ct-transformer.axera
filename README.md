@@ -34,7 +34,6 @@
 | `python/` | Python SDK（pyaxengine NPU 推理） |
 | `cpp/` | C++ SDK（AX_ENGINE 原生 API 交叉编译） |
 | `model_convert/` | ONNX 导出 + Pulsar2 编译（复现用） |
-| `reports/` | 导出、编译、仿真、精度、上板报告 |
 
 ## 板端环境要求
 

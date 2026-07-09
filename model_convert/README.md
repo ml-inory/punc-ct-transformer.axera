@@ -35,14 +35,17 @@ pip list | grep onnx
 
 ### Pulsar2 环境
 
-Pulsar2 通过 Docker 镜像提供：
+Pulsar2 通过 Docker 镜像提供。从 HuggingFace 下载镜像 tar.gz，用 `docker load` 导入：
 
 ```bash
-# 从 HuggingFace 镜像站拉取
-docker pull pulsar2:6.0
+# 下载 Pulsar2 Docker 镜像（~5GB）
+wget https://hf-mirror.com/AXERA-TECH/Pulsar2/resolve/main/pulsar2_6.0.tar.gz
+
+# 导入镜像
+docker load -i pulsar2_6.0.tar.gz
 ```
 
-> 镜像地址：https://hf-mirror.com/AXERA-TECH/Pulsar2
+> 镜像仓库：https://hf-mirror.com/AXERA-TECH/Pulsar2
 
 验证：
 

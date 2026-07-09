@@ -5,6 +5,9 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # AX Engine runtime (set AX_RUNTIME_ROOT to BSP SDK or board sysroot)
+if(DEFINED ENV{AX_RUNTIME_ROOT})
+    set(AX_RUNTIME_ROOT "$ENV{AX_RUNTIME_ROOT}")
+endif()
 if(DEFINED AX_RUNTIME_ROOT)
     message(STATUS "AX_RUNTIME_ROOT: ${AX_RUNTIME_ROOT}")
     include_directories(${AX_RUNTIME_ROOT}/include)
@@ -17,8 +20,11 @@ add_library(sherpa_punct STATIC
 )
 target_include_directories(sherpa_punct PUBLIC include)
 
+if(DEFINED ENV{AX_RUNTIME_ROOT})
+    set(AX_RUNTIME_ROOT "$ENV{AX_RUNTIME_ROOT}")
+endif()
 if(DEFINED AX_RUNTIME_ROOT)
-    target_link_libraries(sherpa_punct PUBLIC ax_engine ax_sys pthread dl)
+    target_link_libraries(sherpa_punct PUBLIC ax_engine ax_interpreter ax_sys pthread dl)
 endif()
 
 # Demo

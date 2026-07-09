@@ -2,8 +2,9 @@
 # Cross-compile sherpa-punct C++ SDK for AX650 (aarch64).
 #
 # Usage:
-#   cd cpp && ./build.sh              # auto-download BSP if needed
-#   BSP_ROOT=/path/to/sdk ./build.sh  # use existing SDK
+#   cd cpp && ./build.sh              # auto-download toolchain + BSP
+#   CROSS_PREFIX=/path/to/bin/...-    # use specific cross-compiler
+#   BSP_ROOT=/path/to/sdk ./build.sh  # use existing BSP SDK
 #
 # Output: build/demo
 
@@ -12,25 +13,62 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$SCRIPT_DIR"
 
+TOOLCHAIN_URL="https://developer.arm.com/-/media/Files/downloads/gnu-a/9.2-2019.12/binrel/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu.tar.xz"
 BSP_URL="https://hf-mirror.com/AXERA-TECH/AX650-Community-Hub/resolve/main/sdk/edge-computing-AX650_SDK_V3.10.2/02.%20SDK/AX650_SDK_V3.10.2/AX650_SDK_V3.10.2_20260513151335.tgz"
-BSP_DIR="$SCRIPT_DIR/ax650_sdk"
 
-# ── Resolve BSP_ROOT ──────────────────────────────────────────────
+# ── Resolve cross-compiler (CROSS_PREFIX) ─────────────────────────
 
-if [ -n "${BSP_ROOT:-}" ]; then
-    # User-specified path
-    true
-elif [ -d "$BSP_DIR" ] && [ -f "$BSP_DIR/toolchain/bin/aarch64-none-linux-gnu-g++" ]; then
-    BSP_ROOT="$BSP_DIR"
-else
-    # Download BSP SDK
-    echo "BSP SDK not found, downloading to $BSP_DIR ..."
-    mkdir -p "$BSP_DIR"
+resolve_cross_prefix() {
+    local name="aarch64-none-linux-gnu-g++"
+
+    [ -n "${CROSS_PREFIX:-}" ] && { echo "$CROSS_PREFIX"; return 0; }
+
+    if command -v "$name" &>/dev/null; then
+        echo "$(dirname "$(command -v "$name")")/aarch64-none-linux-gnu-"
+        return 0
+    fi
+
+    for dir in \
+        "$SCRIPT_DIR/toolchain" \
+        "$HOME/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu" \
+        /opt/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu; do
+        if [ -f "$dir/bin/$name" ]; then
+            echo "$dir/bin/aarch64-none-linux-gnu-"
+            return 0
+        fi
+    done
+
+    local tc="$SCRIPT_DIR/toolchain"
+    echo "Downloading ARM GNU toolchain..."
+    mkdir -p "$tc"
+    wget -q --show-progress "$TOOLCHAIN_URL" -O "$SCRIPT_DIR/toolchain.tar.xz"
+    tar xf "$SCRIPT_DIR/toolchain.tar.xz" --strip-components=1 -C "$tc"
+    rm -f "$SCRIPT_DIR/toolchain.tar.xz"
+    echo "$tc/bin/aarch64-none-linux-gnu-"
+}
+
+CROSS_PREFIX="$(resolve_cross_prefix)"
+
+# ── Resolve BSP_ROOT (headers + NPU libs) ─────────────────────────
+
+resolve_bsp_root() {
+    [ -n "${BSP_ROOT:-}" ] && { echo "$BSP_ROOT"; return 0; }
+
+    local bsp="$SCRIPT_DIR/ax650_sdk"
+    if [ -d "$bsp/msp/out/include" ]; then
+        echo "$bsp"; return 0
+    fi
+
+    echo "Downloading AX650 BSP SDK..."
+    rm -rf "$bsp"
+    mkdir -p "$bsp"
     wget -q --show-progress "$BSP_URL" -O "$SCRIPT_DIR/ax650_sdk.tgz"
-    tar xzf "$SCRIPT_DIR/ax650_sdk.tgz" --strip-components=1 -C "$BSP_DIR"
+    tar xzf "$SCRIPT_DIR/ax650_sdk.tgz" --strip-components=1 -C "$bsp"
     rm -f "$SCRIPT_DIR/ax650_sdk.tgz"
-    BSP_ROOT="$BSP_DIR"
-fi
+    echo "$bsp"
+}
+
+BSP_ROOT="$(resolve_bsp_root)"
 
 # ── Resolve AX_RUNTIME_ROOT ──────────────────────────────────────
 
@@ -39,28 +77,22 @@ if [ -n "${AX_RUNTIME_ROOT:-}" ]; then
 elif [ -d "$BSP_ROOT/ax_engine" ]; then
     AX_RUNTIME_ROOT="$BSP_ROOT/ax_engine"
 else
-    AX_RUNTIME_ROOT="$BSP_ROOT"
+    AX_RUNTIME_ROOT="$BSP_ROOT/msp/out"
 fi
 
-# Validate
-if [ ! -f "$BSP_ROOT/toolchain/bin/aarch64-none-linux-gnu-g++" ]; then
-    echo "ERROR: Cross-compiler not found at $BSP_ROOT/toolchain/bin/"
-    exit 1
-fi
-
-echo "BSP_ROOT:        $BSP_ROOT"
-echo "AX_RUNTIME_ROOT: $AX_RUNTIME_ROOT"
+echo "CROSS_PREFIX:     $CROSS_PREFIX"
+echo "BSP_ROOT:         $BSP_ROOT"
+echo "AX_RUNTIME_ROOT:  $AX_RUNTIME_ROOT"
 echo ""
 
 # ── Build ─────────────────────────────────────────────────────────
+export CROSS_PREFIX BSP_ROOT AX_RUNTIME_ROOT
 
 rm -rf build
 mkdir build && cd build
 
 cmake .. \
     -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake \
-    -DBSP_ROOT="$BSP_ROOT" \
-    -DAX_RUNTIME_ROOT="$AX_RUNTIME_ROOT" \
     -DCMAKE_BUILD_TYPE=Release
 
 make -j"$(nproc)"

@@ -28,7 +28,7 @@ from onnxsim import simplify
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--input", default="model.onnx", help="Input ONNX path")
-    parser.add_argument("--output", default="model_static.onnx", help="Output ONNX path")
+    parser.add_argument("--output", default="export/model.onnx", help="Output ONNX path")
     args = parser.parse_args()
 
     print(f"Loading {args.input}...")

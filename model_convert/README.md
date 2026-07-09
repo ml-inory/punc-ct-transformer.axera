@@ -50,29 +50,72 @@ docker load -i pulsar2_6.0.tar.gz
 验证：
 
 ```bash
-docker run --rm pulsar2:6.0 -c "pulsar2 --version"
+docker run --rm pulsar2:6.0 pulsar2 version
 ```
 
 ## ONNX 导出与静态化
 
 此模型的 ONNX 由 sherpa-onnx 项目预导出。
-`export_onnx.py` 负责静态化和验证：
+`export_onnx.py` 负责静态化和验证，产物位于 `export/model.onnx`：
 
 ```bash
-python export_onnx.py --input model.onnx --output model_static.onnx
+mkdir -p export
+python export_onnx.py --input model.onnx --output export/model.onnx
 ```
 
 验证：
 
 ```bash
-python -c "import onnx; onnx.checker.check_model('model_static.onnx'); print('OK')"
+python -c "import onnx; onnx.checker.check_model('export/model.onnx'); print('OK')"
 ```
 
 ## 校准数据准备
 
-校准数据已随包提供：`calib_data.tar.gz`，包含 10 组中文文本样本的 token ID 数组。
+校准数据需要手动生成。在 `model_convert/` 目录下运行以下脚本，使用 `models/tokens.json` 词表将中文文本转为 token ID 数组：
 
-如需重新生成：
+```bash
+mkdir -p export
+python3 << 'EOF'
+import json, os, tarfile, numpy as np
+
+with open("../models/tokens.json") as f:
+    tokens = json.load(f)
+token_to_id = {t: i for i, t in enumerate(tokens)}
+
+def encode(text):
+    ids = []
+    for ch in text:
+        ids.append(token_to_id.get(ch, token_to_id.get("<unk>", 0)))
+    if len(ids) < 64:
+        ids += [0] * (64 - len(ids))
+    else:
+        ids = ids[:64]
+    return np.array([ids], dtype=np.int32)  # shape (1, 64)
+
+texts = [
+    "今天天气真好我们出去散步吧",
+    "你好吗我很好谢谢你的关心",
+    "这个方案有三个优点第一成本低第二效率高第三维护简单",
+    "请确认以下事项一合同已签署二款项已到账三交付日期已确定",
+    "人工智能技术正在改变我们的生活方式",
+    "明天下午三点在公司会议室开会请准时参加",
+    "他是一名优秀的工程师工作认真负责",
+    "北京是中国的首都拥有悠久的历史文化",
+    "随着科技的发展人们的生活越来越便利",
+    "学习新知识需要耐心和毅力坚持下去就会有收获",
+]
+
+for i, text in enumerate(texts):
+    ids = encode(text)
+    np.save(f"export/input_{i}.npy", ids)
+
+with tarfile.open("export/calib_data.tar.gz", "w:gz") as tar:
+    for i in range(len(texts)):
+        tar.add(f"export/input_{i}.npy", arcname=f"input_{i}.npy")
+EOF
+```
+
+如需自定义校准文本：
 
 ```python
 import numpy as np, tarfile

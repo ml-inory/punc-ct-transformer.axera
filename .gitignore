@@ -8,3 +8,8 @@ python/sherpa_punct_sdk/tokens.json
 model_convert/tokens.json
 __pycache__/
 *.pyc
+
+# model_convert: generated artifacts
+model_convert/compile/
+model_convert/export/
+model_convert/venv/

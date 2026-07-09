@@ -113,6 +113,7 @@ cd cpp
 
 # 推送 demo 到板端并运行（模型文件已提前放在板端）
 scp build/demo root@<board>:/tmp/
+# 直接用 -m/-t 指定路径，或放 /tmp 下自动检测
 ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo -m model.axmodel -t tokens.json"
 ```
 
@@ -127,12 +128,21 @@ ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo -m model.axmodel -t
 | Cosine Similarity | 0.9998 |
 | MAE | 0.157 |
 
-## 上板性能
+## 上板测试 (AX650)
 
-| SDK | 引擎 | 延迟 |
-|-----|------|------|
-| C++ | AX_ENGINE_RunSync 原生 API | avg 0.254ms |
-| Python | pyaxengine AxEngineExecutionProvider | ~同 |
+| SDK | 引擎 | 延迟/次 | 短文本 | 长文本 |
+|-----|------|---------|--------|--------|
+| C++ | AX_ENGINE_RunSync | ~0.25ms | ✅ | ✅ |
+| Python | pyaxengine | ~同 | ✅ | ✅ |
+
+### 实测输出
+
+```
+Input:  你好吗how are you我很好谢谢
+Output: 你好吗？how are you我很好，谢谢。
+
+Input:  人工智能技术正在改变我们的生活方式...（长文本）
+Output: 人工智能技术正在改变我们的生活方式。明天下午三点...
 
 ## 已知限制
 

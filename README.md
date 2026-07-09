@@ -102,30 +102,30 @@ python sherpa_punct_sdk/example.py
 python sherpa_punct_sdk/example.py "今天天气真好我们出去散步吧"
 ```
 
-### C++ SDK（交叉编译 → 上板）
+### C++ SDK（CMake 交叉编译 → 上板）
 
 ```bash
 cd cpp
 
-# 1. 准备交叉编译器
-#    下载 aarch64-none-linux-gnu-g++ 工具链，例如：
-#    https://developer.arm.com/downloads/-/gnu-a
+# 1. 下载 AX650 BSP SDK（含 aarch64 交叉编译器和 NPU 运行时）
+#    下载地址：https://hf-mirror.com/AXERA-TECH/AX650-Community-Hub/resolve/main/sdk/
+#             edge-computing-AX650_SDK_V3.10.2/02.%20SDK/AX650_SDK_V3.10.2/
+#             AX650_SDK_V3.10.2_20260513151335.tgz
+wget <BSP_SDK_URL> -O ax650_sdk.tgz
+tar xzf ax650_sdk.tgz
 
-# 2. 从板端拉取 NPU 头文件和运行时库（交叉链接需要）
-scp -r root@<board>:/soc/lib/ ax_libs/
-scp -r root@<board>:/soc/include/ ax_headers/
+# 2. CMake 交叉编译
+mkdir build && cd build
+cmake .. \
+    -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake \
+    -DBSP_ROOT=../ax650_sdk \
+    -DAX_RUNTIME_ROOT=../ax650_sdk/ax_engine \
+    -DCMAKE_BUILD_TYPE=Release
+make -j$(nproc)
 
-# 3. 交叉编译
-<CROSS_COMPILE_PREFIX>g++ -std=c++17 \
-    -Iinclude -Iax_headers/include -Lax_libs/lib \
-    -Wl,-rpath-link,ax_libs/lib \
-    -o demo src/punctuation_runner.cpp examples/demo.cpp \
-    -lax_engine -lax_sys -lpthread -ldl
+# 产物：build/demo
 
-# <CROSS_COMPILE_PREFIX> 示例：
-#   ~/gcc-arm-9.2-2019.12-x86_64-aarch64-none-linux-gnu/bin/aarch64-none-linux-gnu-
-
-# 4. 推送 demo 到板端并运行（模型文件已提前放在板端）
+# 3. 推送 demo 到板端并运行（模型文件已提前放在板端）
 scp demo root@<board>:/tmp/
 ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo /path/to/model.axmodel /path/to/tokens.json"
 ```

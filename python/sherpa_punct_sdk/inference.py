@@ -59,7 +59,13 @@ class PunctInference:
                 pass
 
         if session is None:
-            import onnxruntime as ort
+            try:
+                import onnxruntime as ort
+            except ImportError:
+                raise RuntimeError(
+                    "No inference backend available. "
+                    "Install pyaxengine for NPU or onnxruntime for CPU fallback."
+                )
 
             session = ort.InferenceSession(
                 self.model_path,

@@ -1,5 +1,4 @@
 numpy>=1.21
-onnxruntime>=1.14
 # On-device AX650 NPU inference:
 #   git clone https://github.com/AXERA-TECH/pyaxengine.git
 #   cd pyaxengine && pip install .

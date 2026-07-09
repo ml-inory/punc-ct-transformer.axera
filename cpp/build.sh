@@ -54,21 +54,26 @@ CROSS_PREFIX="$(resolve_cross_prefix)"
 resolve_bsp_root() {
     [ -n "${BSP_ROOT:-}" ] && return 0
 
+    # 1. Local cache: cpp/ax650_sdk/
     local bsp="$SCRIPT_DIR/ax650_sdk"
-    if [ -d "$bsp/msp/out/include" ]; then
-        return 0  # already cached, caller prints the path
-    fi
+    [ -d "$bsp/msp/out/include" ] && { BSP_ROOT="$bsp"; return 0; }
 
-    echo "BSP SDK not cached, downloading (one-time)..."
+    # 2. Common download locations
+    for d in "$HOME/Downloads/AX650_SDK_"*; do
+        [ -d "$d/msp/out/include" ] && { BSP_ROOT="$d"; return 0; }
+    done
+
+    # 3. Download (one-time)
+    echo "BSP SDK not found, downloading (one-time)..."
     rm -rf "$bsp"
     mkdir -p "$bsp"
     wget -q --show-progress "$BSP_URL" -O "$SCRIPT_DIR/ax650_sdk.tgz"
     tar xzf "$SCRIPT_DIR/ax650_sdk.tgz" --strip-components=1 -C "$bsp"
     rm -f "$SCRIPT_DIR/ax650_sdk.tgz"
+    BSP_ROOT="$bsp"
 }
 
 resolve_bsp_root
-BSP_ROOT="${BSP_ROOT:-$SCRIPT_DIR/ax650_sdk}"
 
 # ── Resolve AX_RUNTIME_ROOT ──────────────────────────────────────
 

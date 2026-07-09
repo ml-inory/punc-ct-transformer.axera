@@ -373,21 +373,66 @@ std::string PunctuationRunner::Run(const std::string& text) {
     auto token_ids = Tokenize(text);
     if (token_ids.empty()) return text;
 
-    int num_tokens = std::min(kInputLen, static_cast<int>(token_ids.size()));
+    int total_tokens = static_cast<int>(token_ids.size());
+    const int kStride = 60;  // overlap = kInputLen - kStride = 4
 
-    // Prepare padded input
-    std::vector<int32_t> input(kInputLen, 0);
-    for (int i = 0; i < num_tokens; i++) input[i] = token_ids[i];
-    memcpy(in_bufs_[0].pVirAddr, input.data(), kInputLen * sizeof(int32_t));
+    // Short text: single inference
+    if (total_tokens <= kInputLen) {
+        std::vector<int32_t> input(kInputLen, 0);
+        for (int i = 0; i < total_tokens; i++) input[i] = token_ids[i];
+        memcpy(in_bufs_[0].pVirAddr, input.data(), kInputLen * sizeof(int32_t));
 
-    // Run inference
-    AX_S32 ret = AX_ENGINE_RunSync(engine_, &io_);
-    if (ret != 0) {
-        std::cerr << "AX_ENGINE_RunSync failed: 0x" << std::hex << ret << std::dec << std::endl;
-        return text;
+        AX_S32 ret = AX_ENGINE_RunSync(engine_, &io_);
+        if (ret != 0) {
+            std::cerr << "AX_ENGINE_RunSync failed: 0x" << std::hex << ret << std::dec << std::endl;
+            return text;
+        }
+        const float* logits = (const float*)out_bufs_[0].pVirAddr;
+        return Decode(logits, total_tokens, token_ids);
     }
 
-    // Get output
-    const float* logits = (const float*)out_bufs_[0].pVirAddr;
-    return Decode(logits, num_tokens, token_ids);
+    // Long text: sliding window
+    // Output buffer for all per-token logits: total_tokens x kNumClasses
+    std::vector<float> all_logits(total_tokens * kNumClasses, 0.0f);
+
+    for (int start = 0; start < total_tokens; start += kStride) {
+        int end = std::min(start + kInputLen, total_tokens);
+        int chunk_len = end - start;
+
+        // Prepare padded input
+        std::vector<int32_t> input(kInputLen, 0);
+        for (int i = 0; i < chunk_len; i++) input[i] = token_ids[start + i];
+        memcpy(in_bufs_[0].pVirAddr, input.data(), kInputLen * sizeof(int32_t));
+
+        // Run inference
+        AX_S32 ret = AX_ENGINE_RunSync(engine_, &io_);
+        if (ret != 0) {
+            std::cerr << "AX_ENGINE_RunSync failed: 0x" << std::hex << ret << std::dec << std::endl;
+            return text;
+        }
+
+        const float* logits = (const float*)out_bufs_[0].pVirAddr;
+
+        // Copy logits to output buffer
+        if (start == 0) {
+            // First window: keep all token logits
+            for (int t = 0; t < chunk_len; t++) {
+                for (int c = 0; c < kNumClasses; c++) {
+                    all_logits[t * kNumClasses + c] = logits[t * kNumClasses + c];
+                }
+            }
+        } else {
+            // Subsequent windows: skip overlap, keep only new tokens
+            int overlap = kInputLen - kStride;
+            for (int t = overlap; t < chunk_len; t++) {
+                int global_t = start + t;
+                if (global_t >= total_tokens) break;
+                for (int c = 0; c < kNumClasses; c++) {
+                    all_logits[global_t * kNumClasses + c] = logits[t * kNumClasses + c];
+                }
+            }
+        }
+    }
+
+    return Decode(all_logits.data(), total_tokens, token_ids);
 }

@@ -42,6 +42,11 @@ int main(int argc, char* argv[]) {
         texts = {
             "你好吗how are you我很好谢谢",
             "今天天气真不错我们出去走走吧",
+            // Long text: auto-sliding-window test
+            "人工智能技术正在改变我们的生活方式"
+            "明天下午三点在公司会议室开会请准时参加"
+            "他是一名优秀的工程师工作认真负责"
+            "北京是中国的首都拥有悠久的历史文化",
         };
     }
 

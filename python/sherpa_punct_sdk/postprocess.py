@@ -89,12 +89,14 @@ def decode_punctuation(
     # Build output
     ans = []
     for j, p in enumerate(punctuations):
+        if j >= len(ids):
+            break
         t = id2token[ids[j]] if ids[j] < len(id2token) else "<unk>"
         # Insert space before ASCII tokens
         if ans and len(ans[-1][0].encode()) == 1 and len(t[0].encode()) == 1:
             ans.append(" ")
         ans.append(t)
-        if p != IGNORE_ID and p < len(PUNCT_MARKS):
+        if p != IGNORE_ID and p < len(PUNCT_MARKS) and PUNCT_MARKS[p]:
             ans.append(PUNCT_MARKS[p])
 
     return "".join(ans)

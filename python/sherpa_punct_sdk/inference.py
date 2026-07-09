@@ -86,6 +86,20 @@ class PunctInference:
         if self._session is None:
             self._session = self._create_session()
 
-        input_name = self._session.get_inputs()[0].name
-        results = self._session.run(None, {input_name: inputs})
+        # Build input feed for all model inputs
+        feed = {}
+        for inp in self._session.get_inputs():
+            name = inp.name
+            shape = inp.shape
+            if name == "inputs":
+                feed[name] = inputs
+            elif name == "text_lengths":
+                # text_lengths: int32 scalar with sequence length
+                feed[name] = np.array([inputs.shape[1]], dtype=np.int32)
+            else:
+                # Unknown input: pass zeros of expected shape
+                dshape = [d if isinstance(d, int) else 1 for d in shape]
+                feed[name] = np.zeros(dshape, dtype=np.float32)
+
+        results = self._session.run(None, feed)
         return results[0]

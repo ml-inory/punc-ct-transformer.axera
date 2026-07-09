@@ -67,10 +67,14 @@ class CharTokenizer:
                 ids.append(self.token2id.get(w, self.unk_id))
         return ids
 
+    def tokenize_full(self, text: str) -> List[int]:
+        """Tokenize full text without truncation or padding."""
+        return self.tokenize(text)
+
     def encode(
         self, text: str, pad_length: int = 64
     ) -> Tuple[np.ndarray, int]:
-        """Tokenize and pad to fixed length.
+        """Tokenize and pad to fixed length. Truncates if > pad_length.
 
         Returns:
             input_array: (1, pad_length) int32 numpy array
@@ -88,3 +92,37 @@ class CharTokenizer:
         padded[0, : len(ids)] = ids
 
         return padded, min(original_len, pad_length)
+
+    def encode_long(
+        self, text: str, window_size: int = 64
+    ) -> Tuple[List[np.ndarray], List[int], List[int]]:
+        """Tokenize long text into sliding windows for batched inference.
+
+        Splits full token sequence into windows of window_size.
+        Each window is padded to window_size if shorter.
+
+        Returns:
+            windows: list of (1, window_size) int32 arrays
+            window_token_ids: list of token ID lists per window
+            window_lens: original token lengths per window (before padding)
+        """
+        ids = self.tokenize(text)
+        if not ids:
+            return [], [], []
+
+        windows = []
+        window_token_ids = []
+        window_lens = []
+
+        for start in range(0, len(ids), window_size):
+            chunk = ids[start:start + window_size]
+            chunk_len = len(chunk)
+
+            padded = np.zeros((1, window_size), dtype=np.int32)
+            padded[0, :chunk_len] = chunk
+
+            windows.append(padded)
+            window_token_ids.append(chunk)
+            window_lens.append(chunk_len)
+
+        return windows, window_token_ids, window_lens

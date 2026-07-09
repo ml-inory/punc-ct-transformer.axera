@@ -62,11 +62,13 @@ echo "/soc/lib" >> /etc/ld.so.conf && ldconfig
 详见 `model_convert/README.md`。
 
 ```bash
+cd model_convert
+
 # 1. 下载 ONNX 模型（~281MB）
-wget https://huggingface.co/csukuangfj/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/resolve/main/model.onnx -O model_convert/model.onnx
+wget https://huggingface.co/csukuangfj/sherpa-onnx-punct-ct-transformer-zh-en-vocab272727-2024-04-12/resolve/main/model.onnx -O model.onnx
 
 # 2. 使用 Pulsar2 编译为 AXMODEL
-cd model_convert && ./compile_pulsar2.sh
+./compile_pulsar2.sh
 
 # 3. 复制产物
 cp compile/model.axmodel ../models/model.axmodel
@@ -77,6 +79,8 @@ cp compile/model.axmodel ../models/model.axmodel
 ### Python SDK
 
 ```bash
+cd python
+
 # 0. 板端要求 Python 3.11+
 python3 --version
 # 如未安装：curl -LsSf https://astral.sh/uv/install.sh | sh && uv python install 3.11
@@ -93,28 +97,28 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple numpy onnxruntime
 #   scp axengine-0.1.3-py3-none-any.whl root@<board>:/tmp/
 pip install /tmp/axengine-0.1.3-py3-none-any.whl
 
-# 3. 运行（需设置 PYTHONPATH 以导入 sherpa_punct_sdk 包）
-PYTHONPATH=python python python/sherpa_punct_sdk/example.py
-PYTHONPATH=python python python/sherpa_punct_sdk/example.py "今天天气真好我们出去散步吧"
+# 3. 运行
+python sherpa_punct_sdk/example.py
+python sherpa_punct_sdk/example.py "今天天气真好我们出去散步吧"
 ```
 
 ### C++ SDK（交叉编译 → 上板）
 
 ```bash
+cd cpp
+
 # 1. 准备交叉编译器
 #    下载 aarch64-none-linux-gnu-g++ 工具链，例如：
 #    https://developer.arm.com/downloads/-/gnu-a
 
 # 2. 从板端拉取 NPU 头文件和运行时库（交叉链接需要）
-mkdir -p ax_libs ax_headers
 scp -r root@<board>:/soc/lib/ ax_libs/
 scp -r root@<board>:/soc/include/ ax_headers/
 
 # 3. 交叉编译
-cd cpp
 <CROSS_COMPILE_PREFIX>g++ -std=c++17 \
-    -Iinclude -I../ax_headers/include -L../ax_libs/lib \
-    -Wl,-rpath-link,../ax_libs/lib \
+    -Iinclude -Iax_headers/include -Lax_libs/lib \
+    -Wl,-rpath-link,ax_libs/lib \
     -o demo src/punctuation_runner.cpp examples/demo.cpp \
     -lax_engine -lax_sys -lpthread -ldl
 

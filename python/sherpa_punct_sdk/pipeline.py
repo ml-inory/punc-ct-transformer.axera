@@ -4,6 +4,8 @@
 # Long text is automatically split into overlapping windows for the model's
 # fixed 64-token input.
 
+from typing import List
+
 import numpy as np
 
 from .preprocess import CharTokenizer
@@ -36,7 +38,7 @@ class PunctuationPipeline:
         self.id2token = self.tokenizer.id2token
         self.inference = PunctInference(model_path, provider)
 
-    def _run_window(self, tokens: List[int]) -> np.ndarray:
+    def _run_window(self, tokens: list[int]) -> np.ndarray:
         """Run inference on a single window, return logits for valid tokens."""
         n = len(tokens)
         padded = np.zeros((1, INPUT_LENGTH), dtype=np.int32)

@@ -71,69 +71,13 @@ python -c "import onnx; onnx.checker.check_model('export/model.onnx'); print('OK
 
 ## 校准数据准备
 
-校准数据需要手动生成。在 `model_convert/` 目录下运行以下脚本，使用 `models/tokens.json` 词表将中文文本转为 token ID 数组：
+运行 `generate_calib_data.py` 使用 `models/tokens.json` 词表将 10 组中文文本转为 token ID 数组：
 
 ```bash
-mkdir -p export
-python3 << 'EOF'
-import json, os, tarfile, numpy as np
-
-with open("../models/tokens.json") as f:
-    tokens = json.load(f)
-token_to_id = {t: i for i, t in enumerate(tokens)}
-
-def encode(text):
-    ids = []
-    for ch in text:
-        ids.append(token_to_id.get(ch, token_to_id.get("<unk>", 0)))
-    if len(ids) < 64:
-        ids += [0] * (64 - len(ids))
-    else:
-        ids = ids[:64]
-    return np.array([ids], dtype=np.int32)  # shape (1, 64)
-
-texts = [
-    "今天天气真好我们出去散步吧",
-    "你好吗我很好谢谢你的关心",
-    "这个方案有三个优点第一成本低第二效率高第三维护简单",
-    "请确认以下事项一合同已签署二款项已到账三交付日期已确定",
-    "人工智能技术正在改变我们的生活方式",
-    "明天下午三点在公司会议室开会请准时参加",
-    "他是一名优秀的工程师工作认真负责",
-    "北京是中国的首都拥有悠久的历史文化",
-    "随着科技的发展人们的生活越来越便利",
-    "学习新知识需要耐心和毅力坚持下去就会有收获",
-]
-
-for i, text in enumerate(texts):
-    ids = encode(text)
-    np.save(f"export/input_{i}.npy", ids)
-
-with tarfile.open("export/calib_data.tar.gz", "w:gz") as tar:
-    for i in range(len(texts)):
-        tar.add(f"export/input_{i}.npy", arcname=f"input_{i}.npy")
-EOF
+python generate_calib_data.py
 ```
 
-如需自定义校准文本：
-
-```python
-import numpy as np, tarfile
-
-# texts: list of Chinese strings
-# tokenizer: CharTokenizer from tokens.json
-
-inputs = []
-for text in texts:
-    ids = tokenizer.encode(text)[0]  # (1, 64) int32
-    inputs.append(ids)
-
-# Save as tar.gz
-with tarfile.open('calib_data.tar.gz', 'w:gz') as tar:
-    for i, arr in enumerate(inputs):
-        np.save(f'input_{i}.npy', arr)
-    tar.add('.')
-```
+如需自定义校准文本，编辑 `generate_calib_data.py` 中的 `DEFAULT_TEXTS` 列表即可。
 
 ## Pulsar2 编译
 

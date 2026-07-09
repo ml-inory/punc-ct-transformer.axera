@@ -13,3 +13,5 @@ __pycache__/
 model_convert/compile/
 model_convert/export/
 model_convert/venv/
+python/.venv/
+cpp/build/

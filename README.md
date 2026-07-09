@@ -113,8 +113,7 @@ cd cpp
 #             AX650_SDK_V3.10.2_20260513151335.tgz
 wget <BSP_SDK_URL> -O ax650_sdk.tgz
 tar xzf ax650_sdk.tgz
-# 如果解压目录名不是 ax650_sdk，重命名或设置 BSP_ROOT：
-#   export BSP_ROOT=/path/to/AX650_SDK
+# build.sh 会自动发现 cpp/AX650_SDK_* 目录，无需手动指定路径
 
 # 2. 一键编译
 ./build.sh

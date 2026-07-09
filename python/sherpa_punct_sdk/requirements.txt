@@ -1,6 +1,0 @@
-numpy>=1.21
-# pyaxengine: install from source for AX650 NPU inference
-#   git clone https://github.com/AXERA-TECH/pyaxengine.git
-#   cd pyaxengine && pip install .
-# Uncomment below if pyaxengine wheel is available:
-# pyaxengine

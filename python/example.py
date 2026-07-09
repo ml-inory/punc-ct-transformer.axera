@@ -13,19 +13,19 @@ import sys
 def main():
     from sherpa_punct_sdk import PunctuationPipeline
 
-    # Paths relative to project root (script is at python/sherpa_punct_sdk/)
+    # Paths relative to project root (script is at python/)
     base_dir = os.path.dirname(os.path.abspath(__file__))
-    model_path = os.path.join(base_dir, "..", "..", "models", "model.axmodel")
-    tokens_path = os.path.join(base_dir, "..", "..", "models", "tokens.json")
+    model_path = os.path.join(base_dir, "..", "models", "model.axmodel")
+    tokens_path = os.path.join(base_dir, "..", "models", "tokens.json")
 
     # On-device fallback: compiled artifacts via model_convert/
     if not os.path.exists(model_path):
-        model_path = os.path.join(base_dir, "..", "..", "model_convert", "compile", "model.axmodel")
+        model_path = os.path.join(base_dir, "..", "model_convert", "compile", "model.axmodel")
     if not os.path.exists(tokens_path):
-        tokens_path = os.path.join(base_dir, "..", "..", "model_convert", "export", "tokens.json")
+        tokens_path = os.path.join(base_dir, "..", "model_convert", "export", "tokens.json")
     if not os.path.exists(model_path):
         # Use ONNX for local testing (CPU only)
-        model_path = os.path.join(base_dir, "..", "..", "model_convert", "model.onnx")
+        model_path = os.path.join(base_dir, "..", "model_convert", "model.onnx")
         print("NOTE: Using ONNX model (CPU). For NPU, ensure model.axmodel is present.")
         provider = "CPUExecutionProvider"
     else:

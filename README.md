@@ -97,8 +97,8 @@ pip install -i https://pypi.tuna.tsinghua.edu.cn/simple numpy
 pip install /tmp/axengine-0.1.3-py3-none-any.whl
 
 # 3. 运行
-python sherpa_punct_sdk/example.py
-python sherpa_punct_sdk/example.py "今天天气真好我们出去散步吧"
+python example.py
+python example.py "今天天气真好我们出去散步吧"
 ```
 
 ### C++ SDK（CMake 交叉编译 → 上板）

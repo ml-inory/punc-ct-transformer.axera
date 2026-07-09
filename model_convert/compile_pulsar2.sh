@@ -42,8 +42,12 @@ fi
 
 # Check Pulsar2 image
 if ! docker image inspect pulsar2:6.0 > /dev/null 2>&1; then
-    echo "Pulling pulsar2:6.0 Docker image..."
-    docker pull pulsar2:6.0
+    echo "ERROR: pulsar2:6.0 Docker image not found."
+    echo ""
+    echo "Download and import the image from HuggingFace:"
+    echo "  wget https://hf-mirror.com/AXERA-TECH/Pulsar2/resolve/main/pulsar2_6.0.tar.gz"
+    echo "  docker load -i pulsar2_6.0.tar.gz"
+    exit 1
 fi
 
 # Clean previous build

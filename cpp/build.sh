@@ -21,7 +21,7 @@ BSP_URL="https://hf-mirror.com/AXERA-TECH/AX650-Community-Hub/resolve/main/sdk/e
 resolve_cross_prefix() {
     local name="aarch64-none-linux-gnu-g++"
 
-    [ -n "${CROSS_PREFIX:-}" ] && { echo "$CROSS_PREFIX"; return 0; }
+    [ -n "${CROSS_PREFIX:-}" ] && return 0
 
     if command -v "$name" &>/dev/null; then
         echo "$(dirname "$(command -v "$name")")/aarch64-none-linux-gnu-"
@@ -52,23 +52,23 @@ CROSS_PREFIX="$(resolve_cross_prefix)"
 # ── Resolve BSP_ROOT (headers + NPU libs) ─────────────────────────
 
 resolve_bsp_root() {
-    [ -n "${BSP_ROOT:-}" ] && { echo "$BSP_ROOT"; return 0; }
+    [ -n "${BSP_ROOT:-}" ] && return 0
 
     local bsp="$SCRIPT_DIR/ax650_sdk"
     if [ -d "$bsp/msp/out/include" ]; then
-        echo "$bsp"; return 0
+        return 0  # already cached, caller prints the path
     fi
 
-    echo "Downloading AX650 BSP SDK..."
+    echo "BSP SDK not cached, downloading (one-time)..."
     rm -rf "$bsp"
     mkdir -p "$bsp"
     wget -q --show-progress "$BSP_URL" -O "$SCRIPT_DIR/ax650_sdk.tgz"
     tar xzf "$SCRIPT_DIR/ax650_sdk.tgz" --strip-components=1 -C "$bsp"
     rm -f "$SCRIPT_DIR/ax650_sdk.tgz"
-    echo "$bsp"
 }
 
-BSP_ROOT="$(resolve_bsp_root)"
+resolve_bsp_root
+BSP_ROOT="${BSP_ROOT:-$SCRIPT_DIR/ax650_sdk}"
 
 # ── Resolve AX_RUNTIME_ROOT ──────────────────────────────────────
 
@@ -81,7 +81,11 @@ else
 fi
 
 echo "CROSS_PREFIX:     $CROSS_PREFIX"
-echo "BSP_ROOT:         $BSP_ROOT"
+if [ -d "$BSP_ROOT/msp/out/include" ]; then
+    echo "BSP_ROOT:         $BSP_ROOT (cached)"
+else
+    echo "BSP_ROOT:         $BSP_ROOT"
+fi
 echo "AX_RUNTIME_ROOT:  $AX_RUNTIME_ROOT"
 echo ""
 

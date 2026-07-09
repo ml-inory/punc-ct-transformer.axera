@@ -89,7 +89,7 @@ python3 --version
 python3 -m venv .venv
 source .venv/bin/activate
 # 国内板端推荐使用清华镜像加速 pip
-pip install -i https://pypi.tuna.tsinghua.edu.cn/simple numpy onnxruntime
+pip install -i https://pypi.tuna.tsinghua.edu.cn/simple numpy
 
 # 2. 安装 pyaxengine（AX650 NPU 推理后端）
 # 若板端无法访问 GitHub，在 PC 下载 wheel 后 scp 传到板端再安装：
@@ -113,20 +113,16 @@ cd cpp
 #             AX650_SDK_V3.10.2_20260513151335.tgz
 wget <BSP_SDK_URL> -O ax650_sdk.tgz
 tar xzf ax650_sdk.tgz
+# 如果解压目录名不是 ax650_sdk，重命名或设置 BSP_ROOT：
+#   export BSP_ROOT=/path/to/AX650_SDK
 
-# 2. CMake 交叉编译
-mkdir build && cd build
-cmake .. \
-    -DCMAKE_TOOLCHAIN_FILE=../toolchain-aarch64.cmake \
-    -DBSP_ROOT=../ax650_sdk \
-    -DAX_RUNTIME_ROOT=../ax650_sdk/ax_engine \
-    -DCMAKE_BUILD_TYPE=Release
-make -j$(nproc)
+# 2. 一键编译
+./build.sh
 
 # 产物：build/demo
 
 # 3. 推送 demo 到板端并运行（模型文件已提前放在板端）
-scp demo root@<board>:/tmp/
+scp build/demo root@<board>:/tmp/
 ssh root@<board> "cd /tmp && LD_LIBRARY_PATH=/soc/lib ./demo /path/to/model.axmodel /path/to/tokens.json"
 ```
 
